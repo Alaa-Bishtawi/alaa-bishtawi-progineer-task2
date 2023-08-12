@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  web-app:
+    build: ./web-app
+    ports:
+      - "80:80"
+    depends_on:
+      - db-postgres
+    restart: on-failure
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=db-postgres
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+    networks:
+      - app-network
+
+  db-postgres:
+    image: postgres:13.5
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
